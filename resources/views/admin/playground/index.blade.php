@@ -199,9 +199,9 @@
             });
 
             // Show loading, hide previous errors and timing
-            loadingIndicator.classList.remove('hidden');
-            errorMessage.classList.add('hidden');
-            responseTiming.classList.add('hidden');
+            if (loadingIndicator) loadingIndicator.classList.remove('hidden');
+            if (errorMessage) errorMessage.classList.add('hidden');
+            if (responseTiming) responseTiming.classList.add('hidden');
 
             const startTime = performance.now();
 
