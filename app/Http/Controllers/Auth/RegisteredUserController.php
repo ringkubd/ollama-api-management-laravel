@@ -3,39 +3,49 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
+use Illuminate\Validation\Rules\Password;
 
 class RegisteredUserController extends Controller
 {
     /**
-     * Handle an incoming registration request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
+     * Display the registration view.
      */
-    public function store(Request $request): Response
+    public function create()
+    {
+        return view('auth.register');
+    }
+
+    /**
+     * Handle an incoming registration request.
+     */
+    public function store(Request $request)
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->string('password')),
+            'password' => Hash::make($request->password),
         ]);
 
-        event(new Registered($user));
+        // Assign a default viewer role for new registrations
+        // You might want to change this based on your requirements
+        $viewerRole = Role::where('slug', 'viewer')->first();
+        if ($viewerRole) {
+            $user->roles()->attach($viewerRole->id);
+        }
 
         Auth::login($user);
 
-        return response()->noContent();
+        return redirect(route('admin.dashboard'));
     }
 }

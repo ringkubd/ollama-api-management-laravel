@@ -1,0 +1,142 @@
+{
+    "info": {
+        "_postman_id": "9e0f7a2c-3e1b-4a3e-bf9a-58f7e8c01b5d",
+        "name": "Ollama API Management",
+        "description": "A collection for interacting with the Ollama API Management system.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "List Models",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "X-API-Key",
+                        "value": "{{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/models",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "models"
+                    ]
+                },
+                "description": "Lists all available models that can be used for text generation and chat completions."
+            },
+            "response": [ ]
+        },
+        {
+            "name": "Generate Text",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "X-API-Key",
+                        "value": "{{api_key}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"prompt\": \"Write a short story about artificial intelligence\",\n    \"max_tokens\": 200,\n    \"temperature\": 0.7,\n    \"top_p\": 0.9\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/generate/{{model_id}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "generate",
+                        "{{model_id}}"
+                    ]
+                },
+                "description": "Generates text based on the provided prompt using the specified model."
+            },
+            "response": [ ]
+        },
+        {
+            "name": "Chat Completion",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "X-API-Key",
+                        "value": "{{api_key}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"messages\": [\n        {\n            \"role\": \"system\",\n            \"content\": \"You are a helpful assistant.\"\n        },\n        {\n            \"role\": \"user\",\n            \"content\": \"Explain quantum computing in simple terms.\"\n        }\n    ],\n    \"temperature\": 0.7,\n    \"max_tokens\": 200\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/chat/{{model_id}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "chat",
+                        "{{model_id}}"
+                    ]
+                },
+                "description": "Generates a conversational response based on the provided message history using the specified model."
+            },
+            "response": [ ]
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "https://your-domain.com/api/v1",
+            "type": "string",
+            "description": "The base URL of the Ollama API Management system"
+        },
+        {
+            "key": "api_key",
+            "value": "your_api_key_here",
+            "type": "string",
+            "description": "Your API key for authentication"
+        },
+        {
+            "key": "model_id",
+            "value": "llama2",
+            "type": "string",
+            "description": "The ID of the model to use for generation"
+        }
+    ]
+}
