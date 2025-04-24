@@ -74,6 +74,25 @@ class OllamaCompletionService
 
             $responseData = $response->json();
 
+            // Additional validation to ensure we have actual content
+            if (empty($responseData['message']['content']) && isset($responseData['done_reason']) && $responseData['done_reason'] === 'load') {
+                // The model was only loaded but didn't generate content
+                Log::warning('Ollama only loaded the model but did not generate content', [
+                    'model' => $model->model_id,
+                    'response' => $responseData
+                ]);
+
+                // Try one more time now that model is loaded
+                $response = Http::timeout(120)->post("{$this->baseUrl}/api/chat", $payload);
+                $responseTime = microtime(true) - $startTime;
+
+                if (!$response->successful()) {
+                    throw new Exception("Ollama API error on retry: " . $response->body());
+                }
+
+                $responseData = $response->json();
+            }
+
             // Update request with response data
             $apiRequest->update([
                 'response_payload' => $responseData,
@@ -162,6 +181,25 @@ class OllamaCompletionService
             }
 
             $responseData = $response->json();
+
+            // Additional validation to ensure we have actual content
+            if (empty($responseData['response']) && isset($responseData['done_reason']) && $responseData['done_reason'] === 'load') {
+                // The model was only loaded but didn't generate content
+                Log::warning('Ollama only loaded the model but did not generate content', [
+                    'model' => $model->model_id,
+                    'response' => $responseData
+                ]);
+
+                // Try one more time now that model is loaded
+                $response = Http::timeout(120)->post("{$this->baseUrl}/api/generate", $payload);
+                $responseTime = microtime(true) - $startTime;
+
+                if (!$response->successful()) {
+                    throw new Exception("Ollama API error on retry: " . $response->body());
+                }
+
+                $responseData = $response->json();
+            }
 
             // Update request with response data
             $apiRequest->update([

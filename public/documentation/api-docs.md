@@ -5,7 +5,7 @@ Welcome to the Ollama API Management System API documentation. This guide provid
 ## Base URL
 
 ```
-https://your-domain.com/api/v1
+https://your-domain.com/api
 ```
 
 Replace `your-domain.com` with your actual domain where the Ollama API Management system is deployed.
@@ -15,153 +15,58 @@ Replace `your-domain.com` with your actual domain where the Ollama API Managemen
 All API requests require authentication using an API key. Include your API key in the request headers:
 
 ```
-X-API-Key: your_api_key_here
+Authorization: Bearer your_api_key_here
 ```
 
 API keys can be created and managed through the dashboard at `/admin/api-keys`.
 
-## Response Codes
-
-The API uses standard HTTP response codes:
-
-- `200 OK`: Request successful
-- `202 Accepted`: Request has been accepted for processing (queued)
-- `400 Bad Request`: Invalid request parameters
-- `401 Unauthorized`: Missing or invalid API key
-- `403 Forbidden`: Valid API key but insufficient permissions
-- `404 Not Found`: The requested resource does not exist
-- `429 Too Many Requests`: Rate limit exceeded, request has been queued
-- `500 Internal Server Error`: Something went wrong on the server
-
-## Endpoints
+## Available Endpoints
 
 ### List Available Models
 
-Returns a list of all available models that can be used for generation.
+Retrieve a list of all available models you can use for generation.
 
 **Endpoint:** `GET /models`
 
-**Example Request:**
-
-```bash
-curl -X GET \
-  https://your-domain.com/api/v1/models \
-  -H 'X-API-Key: your_api_key_here'
-```
-
-**Example Response:**
-
+**Response Example:**
 ```json
 {
   "models": [
     {
+      "id": "llama2:7b",
       "name": "Llama 2 7B",
-      "model_id": "llama2",
-      "description": "Meta's Llama 2 7B parameter model"
+      "description": "Meta's Llama 2 7B parameter model",
+      "is_active": true,
+      "parameters": {
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "top_k": 40
+      }
     },
     {
-      "name": "Mistral 7B",
-      "model_id": "mistral",
-      "description": "Mistral AI's 7B parameter model"
+      "id": "codellama:7b",
+      "name": "Code Llama 7B",
+      "description": "Meta's Code Llama 7B parameter model optimized for code generation",
+      "is_active": true,
+      "parameters": {
+        "temperature": 0.5,
+        "top_p": 0.95
+      }
     }
   ]
 }
 ```
 
-### Text Generation
+### Chat Completions
 
-Generates text completion based on a provided prompt.
+Generate a conversational response based on a series of messages.
 
-**Endpoint:** `POST /generate/{modelId}`
-
-**URL Parameters:**
-- `modelId` (required): The ID of the model to use for generation (e.g., "llama2")
+**Endpoint:** `POST /chat`
 
 **Request Body:**
-
 ```json
 {
-  "prompt": "Once upon a time",
-  "max_tokens": 100,
-  "temperature": 0.7,
-  "top_p": 0.9,
-  "frequency_penalty": 0,
-  "presence_penalty": 0,
-  "stop": ["\n\n", "END"]
-}
-```
-
-**Request Parameters:**
-- `prompt` (required): The text prompt to generate from
-- `max_tokens` (optional): Maximum number of tokens to generate (default: varies by model)
-- `temperature` (optional): Controls randomness (0.0-1.0, default: 0.8)
-- `top_p` (optional): Nucleus sampling parameter (default: 0.9)
-- `frequency_penalty` (optional): Reduces repetition of token sequences (default: 0)
-- `presence_penalty` (optional): Reduces repetition of topics (default: 0)
-- `stop` (optional): Array of sequences where the API will stop generating (default: none)
-
-**Example Request:**
-
-```bash
-curl -X POST \
-  https://your-domain.com/api/v1/generate/llama2 \
-  -H 'X-API-Key: your_api_key_here' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "prompt": "Write a short poem about programming",
-    "max_tokens": 150,
-    "temperature": 0.7
-  }'
-```
-
-**Example Response:**
-
-```json
-{
-  "id": "gen_12345",
-  "object": "text_completion",
-  "created": 1714064522,
-  "model": "llama2",
-  "choices": [
-    {
-      "text": "In lines of code, a world unfolds,\nLogic and art in patterns told.\nBugs and features, side by side,\nIn digital realms where dreams reside.\n\nCompilers hum, interpreters dance,\nGiving human thoughts their one chance\nTo transform into electric life,\nSolving problems, easing strife.",
-      "index": 0,
-      "finish_reason": "stop"
-    }
-  ],
-  "usage": {
-    "prompt_tokens": 6,
-    "completion_tokens": 59,
-    "total_tokens": 65
-  }
-}
-```
-
-**Queued Response:**
-
-If the system is under heavy load, your request may be queued:
-
-```json
-{
-  "message": "Your request has been queued and will be processed shortly",
-  "queue_position": 3,
-  "estimated_time": 180
-}
-```
-
-### Chat Completion
-
-Generates conversational responses based on a message history.
-
-**Endpoint:** `POST /chat/{modelId}`
-
-**URL Parameters:**
-- `modelId` (required): The ID of the model to use for chat (e.g., "llama2")
-
-**Request Body:**
-
-```json
-{
+  "model": "llama2:7b",
   "messages": [
     {
       "role": "system",
@@ -169,27 +74,134 @@ Generates conversational responses based on a message history.
     },
     {
       "role": "user",
-      "content": "Hello, how are you today?"
+      "content": "Hello, can you explain how neural networks work?"
     }
   ],
   "temperature": 0.7,
-  "max_tokens": 100
+  "max_tokens": 1000
 }
 ```
 
-**Request Parameters:**
-- `messages` (required): Array of messages, each with `role` and `content`
-  - Roles can be: "system", "user", or "assistant"
-- Other parameters match those of the `/generate` endpoint
+**Parameters:**
+- `model` (required): The ID of the model to use for generation
+- `messages` (required): An array of messages in the conversation history
+  - Each message has a `role` (system, user, or assistant) and `content`
+- `temperature` (optional): Controls randomness. Higher values (e.g., 0.8) make output more random, lower values (e.g., 0.2) make it more deterministic. Default: 0.7
+- `max_tokens` (optional): Maximum number of tokens to generate. Default: 1024
 
-**Example Request:**
+**Response:**
+```json
+{
+  "id": "cmpl-123456",
+  "object": "chat.completion",
+  "created": 1677858242,
+  "model": "llama2:7b",
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "Neural networks are computational systems inspired by the human brain..."
+      },
+      "finish_reason": "stop",
+      "index": 0
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 38,
+    "completion_tokens": 125,
+    "total_tokens": 163
+  }
+}
+```
+
+### Text Generation
+
+Generate text based on a prompt.
+
+**Endpoint:** `POST /generate`
+
+**Request Body:**
+```json
+{
+  "model": "llama2:7b",
+  "prompt": "Write a short poem about artificial intelligence.",
+  "temperature": 0.7,
+  "max_tokens": 1000
+}
+```
+
+**Parameters:**
+- `model` (required): The ID of the model to use for generation
+- `prompt` (required): The text prompt to generate from
+- `temperature` (optional): Controls randomness. Default: 0.7
+- `max_tokens` (optional): Maximum number of tokens to generate. Default: 1024
+
+**Response:**
+```json
+{
+  "id": "cmpl-123456",
+  "object": "text.completion",
+  "created": 1677858242,
+  "model": "llama2:7b",
+  "choices": [
+    {
+      "text": "Silicon dreams in neural maze,\nWhispers of code, a digital phase.\nThoughts electric, bound by no chain,\nArtificial wisdom, both wild and tame.\n\nIn data oceans, patterns emerge,\nHuman and machine begin to merge.\nA dance of logic, beyond our sight,\nIntelligence born from binary light.",
+      "finish_reason": "stop",
+      "index": 0
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 12,
+    "completion_tokens": 85,
+    "total_tokens": 97
+  }
+}
+```
+
+## Error Handling
+
+When an API request fails, you will receive a JSON response with an error message and an appropriate HTTP status code.
+
+**Example Error Response:**
+```json
+{
+  "error": {
+    "message": "Invalid API key provided",
+    "type": "authentication_error",
+    "code": "invalid_api_key"
+  }
+}
+```
+
+Common HTTP status codes:
+- `400 Bad Request` - Your request was improperly formatted or had invalid parameters
+- `401 Unauthorized` - Invalid or missing API key
+- `404 Not Found` - The requested resource does not exist
+- `429 Too Many Requests` - You have exceeded your rate limit
+- `500 Internal Server Error` - Something went wrong on our end
+
+## Rate Limits
+
+Requests are subject to rate limiting based on your API key's permissions. The current rate limits are:
+
+- Standard API keys: 60 requests per minute
+- Premium API keys: 300 requests per minute
+
+You can check your current rate limit status in the response headers:
+- `X-RateLimit-Limit`: Maximum number of requests allowed per minute
+- `X-RateLimit-Remaining`: Number of requests remaining in the current window
+- `X-RateLimit-Reset`: Time at which the rate limit will reset (Unix timestamp)
+
+## Using with cURL
+
+Here's an example of making a chat completion request using cURL:
 
 ```bash
-curl -X POST \
-  https://your-domain.com/api/v1/chat/llama2 \
-  -H 'X-API-Key: your_api_key_here' \
-  -H 'Content-Type: application/json' \
+curl -X POST "https://your-domain.com/api/chat" \
+  -H "Authorization: Bearer your_api_key_here" \
+  -H "Content-Type: application/json" \
   -d '{
+    "model": "llama2:7b",
     "messages": [
       {
         "role": "system",
@@ -197,192 +209,17 @@ curl -X POST \
       },
       {
         "role": "user",
-        "content": "Explain quantum computing in simple terms."
+        "content": "Write me a short story about a robot who discovers emotions."
       }
     ],
-    "temperature": 0.7,
-    "max_tokens": 200
+    "temperature": 0.7
   }'
 ```
 
-**Example Response:**
+## Playground
 
-```json
-{
-  "id": "chat_12345",
-  "object": "chat.completion",
-  "created": 1714064665,
-  "model": "llama2",
-  "choices": [
-    {
-      "index": 0,
-      "message": {
-        "role": "assistant",
-        "content": "Quantum computing is like having a super-powered calculator that can try many possible solutions at once instead of one at a time. Regular computers use bits (0s and 1s), but quantum computers use \"qubits\" that can be 0, 1, or both simultaneously—a bit like being in two places at once. This allows them to solve certain complex problems much faster than regular computers. Think of it as having parallel universes helping to solve your math homework!"
-      },
-      "finish_reason": "stop"
-    }
-  ],
-  "usage": {
-    "prompt_tokens": 29,
-    "completion_tokens": 96,
-    "total_tokens": 125
-  }
-}
-```
+For testing API calls interactively, you can use the Model Playground available at `/admin/playground`. The playground provides a user-friendly interface to experiment with different models, parameters, and prompts without writing any code.
 
-## Error Responses
+## Support
 
-**Invalid API Key:**
-```json
-{
-  "error": "Unauthorized",
-  "message": "Invalid API key"
-}
-```
-
-**Model Not Found:**
-```json
-{
-  "error": "Model not found",
-  "message": "The model 'nonexistent-model' is not available"
-}
-```
-
-**Rate Limited:**
-```json
-{
-  "error": "Too many requests",
-  "message": "The server is currently handling too many requests. Please try again later."
-}
-```
-
-**Generation Error:**
-```json
-{
-  "error": "Generation failed",
-  "message": "An error occurred during generation: [specific error details]"
-}
-```
-
-## Rate Limits and Queuing
-
-The API implements a queuing system for handling high traffic. When the queue size exceeds the configured maximum, requests will be rejected with a 429 status code. Otherwise, requests will be queued for processing and will receive a 202 status code with queue position information.
-
-## Example Applications
-
-### Node.js
-
-```javascript
-const axios = require('axios');
-
-async function generateText(prompt) {
-  try {
-    const response = await axios.post('https://your-domain.com/api/v1/generate/llama2', {
-      prompt: prompt,
-      max_tokens: 100,
-      temperature: 0.7
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': 'your_api_key_here'
-      }
-    });
-    
-    return response.data;
-  } catch (error) {
-    console.error('Error:', error.response ? error.response.data : error.message);
-    throw error;
-  }
-}
-
-// Example usage
-generateText('Write a haiku about programming')
-  .then(result => console.log(result))
-  .catch(err => console.error('Failed to generate text:', err));
-```
-
-### Python
-
-```python
-import requests
-
-def generate_text(prompt):
-    url = 'https://your-domain.com/api/v1/generate/llama2'
-    headers = {
-        'Content-Type': 'application/json',
-        'X-API-Key': 'your_api_key_here'
-    }
-    payload = {
-        'prompt': prompt,
-        'max_tokens': 100,
-        'temperature': 0.7
-    }
-    
-    response = requests.post(url, headers=headers, json=payload)
-    
-    if response.status_code == 200:
-        return response.json()
-    elif response.status_code == 202:
-        print(f"Request queued: {response.json()}")
-        return None
-    else:
-        print(f"Error: {response.status_code}")
-        print(response.json())
-        return None
-
-# Example usage
-result = generate_text('Write a haiku about programming')
-if result:
-    print(result['choices'][0]['text'])
-```
-
-### PHP
-
-```php
-<?php
-
-function generate_text($prompt) {
-    $url = 'https://your-domain.com/api/v1/generate/llama2';
-    $data = [
-        'prompt' => $prompt,
-        'max_tokens' => 100,
-        'temperature' => 0.7
-    ];
-    
-    $headers = [
-        'Content-Type: application/json',
-        'X-API-Key: your_api_key_here'
-    ];
-    
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    
-    $response = curl_exec($ch);
-    $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    
-    $result = json_decode($response, true);
-    
-    if ($status_code == 200) {
-        return $result;
-    } else {
-        echo "Error: " . $status_code . "\n";
-        print_r($result);
-        return null;
-    }
-}
-
-// Example usage
-$result = generate_text('Write a haiku about programming');
-if ($result) {
-    echo $result['choices'][0]['text'] . "\n";
-}
-```
-
-## Getting Help
-
-If you encounter any issues with the API, please contact your system administrator or refer to the admin dashboard for more information.
+If you encounter any issues or have questions about the API, please contact our support team at support@example.com.

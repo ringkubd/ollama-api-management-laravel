@@ -54,6 +54,16 @@
                 </div>
             </div>
 
+            <!-- Response timing indicator -->
+            <div id="response-timing" class="mb-4 hidden">
+                <div class="flex items-center text-sm text-gray-500">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Response time: <span id="response-time">0</span>ms</span>
+                </div>
+            </div>
+
             <!-- Chat Interface -->
             <div id="chat-panel" class="tab-panel">
                 <div class="border rounded-md mb-4">
@@ -100,67 +110,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Loading indicator -->
-            <div id="loading-indicator" class="hidden">
-                <div class="flex justify-center items-center py-4">
-                    <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span class="ml-2 text-blue-600">Processing request...</span>
-                </div>
-            </div>
-
-            <!-- Error message -->
-            <div id="error-message" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="font-bold">Error</p>
-                        <p id="error-text"></p>
-                    </div>
-                    <button id="view-details-btn" class="bg-red-700 text-white px-3 py-1 rounded text-sm hover:bg-red-800">
-                        View Details
-                    </button>
-                </div>
-            </div>
-
-            <!-- Error Details Modal -->
-            <div id="error-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-                <div class="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-                    <div class="bg-red-600 text-white px-4 py-2 flex justify-between items-center">
-                        <h3 class="text-lg font-bold">Error Details</h3>
-                        <button id="close-modal-btn" class="text-white hover:text-gray-200">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
-                    </div>
-                    <div class="p-4 overflow-y-auto flex-grow">
-                        <div class="mb-4">
-                            <h4 class="font-bold text-gray-700">Error Message</h4>
-                            <div id="modal-error-text" class="bg-red-50 p-3 rounded border border-red-200 text-red-700"></div>
-                        </div>
-
-                        <div class="mb-4">
-                            <h4 class="font-bold text-gray-700">Exception Class</h4>
-                            <div id="exception-class" class="bg-gray-50 p-3 rounded border border-gray-200 font-mono text-sm"></div>
-                        </div>
-
-                        <div class="mb-4">
-                            <h4 class="font-bold text-gray-700">File & Line</h4>
-                            <div id="exception-file-line" class="bg-gray-50 p-3 rounded border border-gray-200 font-mono text-sm"></div>
-                        </div>
-
-                        <div>
-                            <h4 class="font-bold text-gray-700">Stack Trace</h4>
-                            <pre id="exception-trace" class="bg-gray-50 p-3 rounded border border-gray-200 font-mono text-xs overflow-x-auto whitespace-pre-wrap max-h-96"></pre>
-                        </div>
-                    </div>
-                    <div class="bg-gray-100 px-4 py-3 flex justify-end">
-                        <button id="copy-error-btn" class="bg-blue-600 text-white px-4 py-2 rounded mr-2 hover:bg-blue-700">Copy to Clipboard</button>
-                        <button id="close-modal-btn2" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Close</button>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -169,62 +118,39 @@
 @section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Error modal functionality
-        const errorModal = document.getElementById('error-modal');
+        // Initialize UI elements
+        const tabs = document.querySelectorAll('#tabs button');
+        const temperatureSlider = document.getElementById('temperature');
+        const temperatureValue = document.getElementById('temperature-value');
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatMessages = document.getElementById('chat-messages');
+        const modelSelect = document.getElementById('model-select');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const errorMessage = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+        const responseTiming = document.getElementById('response-timing');
+        const responseTime = document.getElementById('response-time');
         const viewDetailsBtn = document.getElementById('view-details-btn');
         const closeModalBtn = document.getElementById('close-modal-btn');
         const closeModalBtn2 = document.getElementById('close-modal-btn2');
-        const copyErrorBtn = document.getElementById('copy-error-btn');
+        const errorModal = document.getElementById('error-modal');
         const modalErrorText = document.getElementById('modal-error-text');
         const exceptionClass = document.getElementById('exception-class');
         const exceptionFileLine = document.getElementById('exception-file-line');
         const exceptionTrace = document.getElementById('exception-trace');
+        const copyErrorBtn = document.getElementById('copy-error-btn');
 
         // Store the last error details
         window.lastErrorDetails = {};
 
-        // View details button click
-        viewDetailsBtn.addEventListener('click', () => {
-            modalErrorText.textContent = window.lastErrorDetails.error || 'Unknown error';
-            exceptionClass.textContent = window.lastErrorDetails.exception_class || 'N/A';
-            exceptionFileLine.textContent = window.lastErrorDetails.exception_file ?
-                `${window.lastErrorDetails.exception_file}:${window.lastErrorDetails.exception_line}` : 'N/A';
-            exceptionTrace.textContent = window.lastErrorDetails.exception_trace || 'No stack trace available';
-
-            errorModal.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden'); // Prevent scrolling behind modal
-        });
-
-        // Close modal buttons
-        [closeModalBtn, closeModalBtn2].forEach(btn => {
-            btn.addEventListener('click', () => {
-                errorModal.classList.add('hidden');
-                document.body.classList.remove('overflow-hidden');
-            });
-        });
-
-        // Copy error details to clipboard
-        copyErrorBtn.addEventListener('click', () => {
-            const errorDetails = `
-Error: ${window.lastErrorDetails.error || 'Unknown error'}
-Exception: ${window.lastErrorDetails.exception_class || 'N/A'}
-Location: ${window.lastErrorDetails.exception_file ? `${window.lastErrorDetails.exception_file}:${window.lastErrorDetails.exception_line}` : 'N/A'}
-Code: ${window.lastErrorDetails.exception_code || 'N/A'}
-
-Stack Trace:
-${window.lastErrorDetails.exception_trace || 'No stack trace available'}
-            `.trim();
-
-            navigator.clipboard.writeText(errorDetails).then(() => {
-                copyErrorBtn.textContent = 'Copied!';
-                setTimeout(() => {
-                    copyErrorBtn.textContent = 'Copy to Clipboard';
-                }, 2000);
-            });
-        });
+        // Store conversation history
+        let messageHistory = [{
+            role: 'assistant',
+            content: 'Welcome to the chat! I\'m here to help answer your questions.'
+        }];
 
         // Tab switching
-        const tabs = document.querySelectorAll('#tabs button');
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
                 const target = tab.getAttribute('data-tab-target');
@@ -249,28 +175,11 @@ ${window.lastErrorDetails.exception_trace || 'No stack trace available'}
         });
 
         // Temperature slider
-        const temperatureSlider = document.getElementById('temperature');
-        const temperatureValue = document.getElementById('temperature-value');
-
         temperatureSlider.addEventListener('input', () => {
             temperatureValue.textContent = temperatureSlider.value;
         });
 
-        // Chat functionality
-        const chatForm = document.getElementById('chat-form');
-        const chatInput = document.getElementById('chat-input');
-        const chatMessages = document.getElementById('chat-messages');
-        const modelSelect = document.getElementById('model-select');
-        const loadingIndicator = document.getElementById('loading-indicator');
-        const errorMessage = document.getElementById('error-message');
-        const errorText = document.getElementById('error-text');
-
-        // Store conversation history
-        let messageHistory = [{
-            role: 'assistant',
-            content: 'Welcome to the chat! I\'m here to help answer your questions.'
-        }];
-
+        // Chat form submission
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -289,9 +198,12 @@ ${window.lastErrorDetails.exception_trace || 'No stack trace available'}
                 content: message
             });
 
-            // Show loading
+            // Show loading, hide previous errors and timing
             loadingIndicator.classList.remove('hidden');
             errorMessage.classList.add('hidden');
+            responseTiming.classList.add('hidden');
+
+            const startTime = performance.now();
 
             try {
                 // Get current parameters
@@ -315,6 +227,8 @@ ${window.lastErrorDetails.exception_trace || 'No stack trace available'}
                 });
 
                 const data = await response.json();
+                const endTime = performance.now();
+                const duration = endTime - startTime;
 
                 if (!response.ok) {
                     throw new Error(data.error || 'Failed to get response');
@@ -332,8 +246,13 @@ ${window.lastErrorDetails.exception_trace || 'No stack trace available'}
                 // Add message to UI
                 appendMessage('assistant', assistantMessage);
 
+                // Show response time
+                responseTime.textContent = Math.round(duration);
+                responseTiming.classList.remove('hidden');
+
             } catch (error) {
                 console.error('Error:', error);
+                window.lastErrorDetails = error.responseJSON || {};
                 errorText.textContent = error.message || 'An error occurred while processing your request.';
                 errorMessage.classList.remove('hidden');
             } finally {
@@ -345,66 +264,124 @@ ${window.lastErrorDetails.exception_trace || 'No stack trace available'}
             }
         });
 
+        // Error modal handling
+        if (viewDetailsBtn) {
+            viewDetailsBtn.addEventListener('click', () => {
+                modalErrorText.textContent = window.lastErrorDetails.error || 'Unknown error';
+                exceptionClass.textContent = window.lastErrorDetails.exception_class || 'N/A';
+                exceptionFileLine.textContent = window.lastErrorDetails.exception_file ?
+                    `${window.lastErrorDetails.exception_file}:${window.lastErrorDetails.exception_line}` : 'N/A';
+                exceptionTrace.textContent = window.lastErrorDetails.exception_trace || 'No stack trace available';
+
+                errorModal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden'); // Prevent scrolling behind modal
+            });
+        }
+
+        // Close modal buttons
+        if (closeModalBtn && closeModalBtn2) {
+            [closeModalBtn, closeModalBtn2].forEach(btn => {
+                btn.addEventListener('click', () => {
+                    errorModal.classList.add('hidden');
+                    document.body.classList.remove('overflow-hidden');
+                });
+            });
+        }
+
+        // Copy error details to clipboard
+        if (copyErrorBtn) {
+            copyErrorBtn.addEventListener('click', () => {
+                const errorDetails = `
+Error: ${window.lastErrorDetails.error || 'Unknown error'}
+Exception: ${window.lastErrorDetails.exception_class || 'N/A'}
+Location: ${window.lastErrorDetails.exception_file ? `${window.lastErrorDetails.exception_file}:${window.lastErrorDetails.exception_line}` : 'N/A'}
+Code: ${window.lastErrorDetails.exception_code || 'N/A'}
+
+Stack Trace:
+${window.lastErrorDetails.exception_trace || 'No stack trace available'}
+                `.trim();
+
+                navigator.clipboard.writeText(errorDetails).then(() => {
+                    copyErrorBtn.textContent = 'Copied!';
+                    setTimeout(() => {
+                        copyErrorBtn.textContent = 'Copy to Clipboard';
+                    }, 2000);
+                });
+            });
+        }
+
         // Text generation functionality
         const generateBtn = document.getElementById('generate-btn');
         const promptInput = document.getElementById('prompt');
         const generationResult = document.getElementById('generation-result');
 
-        generateBtn.addEventListener('click', async () => {
-            const prompt = promptInput.value.trim();
-            if (!prompt) return;
+        if (generateBtn) {
+            generateBtn.addEventListener('click', async () => {
+                const prompt = promptInput.value.trim();
+                if (!prompt) return;
 
-            // Show loading
-            loadingIndicator.classList.remove('hidden');
-            errorMessage.classList.add('hidden');
-            generationResult.innerHTML = '<p class="text-gray-400 italic">Generating...</p>';
+                // Show loading, hide previous errors and timing
+                loadingIndicator.classList.remove('hidden');
+                errorMessage.classList.add('hidden');
+                responseTiming.classList.add('hidden');
+                generationResult.innerHTML = '<p class="text-gray-400 italic">Generating...</p>';
 
-            try {
-                // Get current parameters
-                const modelId = modelSelect.value;
-                const temperature = parseFloat(temperatureSlider.value);
-                const maxTokens = parseInt(document.getElementById('max-tokens').value);
+                const startTime = performance.now();
 
-                // Make API request
-                const response = await fetch('{{ route('admin.playground.generate') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        model_id: modelId,
-                        prompt: prompt,
-                        temperature: temperature,
-                        max_tokens: maxTokens
-                    })
-                });
+                try {
+                    // Get current parameters
+                    const modelId = modelSelect.value;
+                    const temperature = parseFloat(temperatureSlider.value);
+                    const maxTokens = parseInt(document.getElementById('max-tokens').value);
 
-                const data = await response.json();
+                    // Make API request
+                    const response = await fetch('{{ route('admin.playground.generate') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            model_id: modelId,
+                            prompt: prompt,
+                            temperature: temperature,
+                            max_tokens: maxTokens
+                        })
+                    });
 
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to get response');
+                    const data = await response.json();
+                    const endTime = performance.now();
+                    const duration = endTime - startTime;
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Failed to get response');
+                    }
+
+                    // Display result
+                    const generatedText = data.choices[0].text;
+                    generationResult.innerHTML = `<pre class="whitespace-pre-wrap">${escapeHtml(generatedText)}</pre>`;
+
+                    // Show response time
+                    responseTime.textContent = Math.round(duration);
+                    responseTiming.classList.remove('hidden');
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    window.lastErrorDetails = error.responseJSON || {};
+                    errorText.textContent = error.message || 'An error occurred while processing your request.';
+                    errorMessage.classList.remove('hidden');
+                    generationResult.innerHTML = '<p class="text-red-500 italic">Error generating text.</p>';
+                } finally {
+                    // Hide loading
+                    loadingIndicator.classList.add('hidden');
                 }
-
-                // Display result
-                const generatedText = data.choices[0].text;
-                generationResult.innerHTML = `<pre class="whitespace-pre-wrap">${escapeHtml(generatedText)}</pre>`;
-
-            } catch (error) {
-                console.error('Error:', error);
-                errorText.textContent = error.message || 'An error occurred while processing your request.';
-                errorMessage.classList.remove('hidden');
-                generationResult.innerHTML = '<p class="text-red-500 italic">Error generating text.</p>';
-            } finally {
-                // Hide loading
-                loadingIndicator.classList.add('hidden');
-            }
-        });
+            });
+        }
 
         // Helper function to append messages to the chat
         function appendMessage(role, content) {
             const messageElement = document.createElement('div');
-            messageElement.className = 'flex items-start';
+            messageElement.className = 'flex items-start mb-4';
 
             const iconClass = role === 'user' ? 'text-blue-500' : 'text-gray-500';
             const bgClass = role === 'user' ? 'bg-blue-50' : 'bg-gray-100';

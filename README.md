@@ -1,61 +1,173 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Ollama API Management
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A comprehensive management system for Ollama API that provides request handling, queueing, model management, and a complete role-based access control system.
 
-## About Laravel
+![Ollama API Management](https://img.shields.io/badge/Ollama-API%20Management-blue)
+![Laravel](https://img.shields.io/badge/Built%20with-Laravel-FF2D20?logo=laravel&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🔍 Overview
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Ollama API Management provides a web interface and API layer to manage and interact with [Ollama](https://ollama.ai/) AI models. It enables organizations to centrally manage API access, monitor usage, control permissions through a role-based system, and test models directly in the browser.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## ✨ Features
 
-## Learning Laravel
+- **API Request Handling & Queuing**: Process and queue AI model requests for efficient handling
+- **Comprehensive Dashboard**: Monitor API usage, performance metrics, and system status
+- **Model Management**: Sync, activate/deactivate, and manage Ollama models
+- **API Key Management**: Generate and manage API keys with granular permissions
+- **User Authentication & RBAC**: Complete role-based access control system
+- **Model Playground**: Test models directly in the browser with chat and text generation interfaces
+- **Detailed API Documentation**: Complete API docs with Postman collection
+- **React Native Integration**: Backend support for notes application using Socketi for real-time communication
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🛠️ Installation
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Prerequisites
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- PHP 8.1 or higher
+- Composer
+- MySQL or compatible database
+- Ollama server running and accessible
 
-## Laravel Sponsors
+### Steps
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+1. Clone the repository
+   ```bash
+   git clone https://github.com/yourusername/ollama-api-management.git
+   cd ollama-api-management
+   ```
 
-### Premium Partners
+2. Install dependencies
+   ```bash
+   composer install
+   ```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development/)**
-- **[Active Logic](https://activelogic.com)**
+3. Copy environment file and configure
+   ```bash
+   cp .env.example .env
+   ```
 
-## Contributing
+   Update the following in your `.env` file:
+   ```
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=ollama_api_management
+   DB_USERNAME=your_db_user
+   DB_PASSWORD=your_password
+   
+   OLLAMA_API_URL=http://your-ollama-server:11434
+   ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+4. Generate application key
+   ```bash
+   php artisan key:generate
+   ```
 
-## Code of Conduct
+5. Run database migrations and seed initial data
+   ```bash
+   php artisan migrate
+   php artisan db:seed
+   ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+6. Start the development server
+   ```bash
+   php artisan serve
+   ```
 
-## Security Vulnerabilities
+7. Visit `http://localhost:8000` in your browser
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 👥 Default Users
 
-## License
+After seeding, the system will be populated with:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- **Admin User**: admin@example.com / password
+- **Editor User**: editor@example.com / password
+- **Viewer User**: viewer@example.com / password
+
+## 🚀 Usage
+
+### API Endpoints
+
+The system provides the following API endpoints:
+
+- `POST /api/chat`: Send chat completions requests
+- `POST /api/generate`: Generate text completions
+- `GET /api/models`: List available models
+
+All API endpoints require an API key provided in the header:
+
+```
+Authorization: Bearer YOUR_API_KEY
+```
+
+### Admin Interface
+
+The admin interface provides several sections:
+
+- **Dashboard**: View API usage statistics and system status
+- **Models**: Manage available Ollama models
+- **API Keys**: Generate and manage API keys
+- **Playground**: Test models directly in the browser
+- **API Docs**: View API documentation
+- **Users & Roles**: Manage users and role permissions
+
+### Model Playground
+
+The Model Playground allows administrators to:
+
+1. Test chat models through an interactive chat interface
+2. Test text generation with prompt-based inputs
+3. Adjust parameters like temperature and max tokens
+4. View detailed error information for debugging
+
+## 📊 System Architecture
+
+The system is built with Laravel and includes:
+
+- **Queue Workers**: For processing long-running AI requests
+- **Role-Based Access Control**: Three default roles (Admin, Editor, Viewer)
+- **Services Layer**: Handles communication with Ollama API
+- **Events System**: Supports real-time notifications via Socketi
+
+## 🔐 Role-Based Access Control
+
+The system includes three default roles:
+
+- **Admin**: Full access to all features
+- **Editor**: Can manage models and API keys, but not users or roles
+- **Viewer**: Read-only access to dashboard and API documentation
+
+## 📝 API Documentation
+
+Complete API documentation is available at `/admin/documentation` in the web interface. A Postman collection is also available for download.
+
+## 🔄 React Native Integration
+
+The system includes backend components to integrate with React Native applications:
+
+- `ProcessNotesAssistanceRequest` job for handling note assistance requests
+- `NoteAssistanceGenerated` event for real-time updates
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 📧 Contact
+
+If you have any questions or feedback, please open an issue on GitHub.
+
+---
+
+Built with ❤️ for Ollama users
